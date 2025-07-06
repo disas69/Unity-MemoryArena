@@ -68,14 +68,14 @@ public class MemoryArenaTest : MonoBehaviour
         _arena.Dispose();
     }
 
-    private unsafe void FillCircle(ref ArenaArray<Vector2> array, float radius)
+    private void FillCircle(ref ArenaArray<Vector2> array, float radius)
     {
         var length = array.Length;
         for (var i = 0; i < length; i++)
         {
             var angle = (Mathf.PI * 2 * i) / length;
-            array.Ptr[i].x = Mathf.Cos(angle) * radius;
-            array.Ptr[i].y = Mathf.Sin(angle) * radius;
+            array[i].x = Mathf.Cos(angle) * radius;
+            array[i].y = Mathf.Sin(angle) * radius;
         }
     }
 
