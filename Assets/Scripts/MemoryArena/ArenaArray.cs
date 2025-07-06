@@ -1,26 +1,26 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
-public readonly unsafe struct ArenaArray<T> : IEnumerable<T>, System.IDisposable where T : unmanaged
+public unsafe struct ArenaArray<T> : IEnumerable<T> where T : unmanaged
 {
-    private readonly T* _array;
-    private readonly int _count;
+    public readonly T* Ptr;
+    public readonly int Length;
+    
+    public ref T this[int index] => ref Ptr[index];
 
-    public int Count => _count;
-    public ref T this[int index] => ref _array[index];
-
-    public ArenaArray(MemoryArena arena, int count)
+    public ArenaArray(MemoryArena arena, int length)
     {
-        _array = arena.Allocate<T>(count);
-        _count = count;
+        Ptr = arena.Allocate<T>(length);
+        Length = length;
     }
 
     public T[] ToArray()
     {
-        var array = new T[_count];
-        for (var i = 0; i < _count; i++)
+        var array = new T[Length];
+        for (var i = 0; i < Length; i++)
         {
-            array[i] = _array[i];
+            array[i] = Ptr[i];
         }
 
         return array;
@@ -28,23 +28,23 @@ public readonly unsafe struct ArenaArray<T> : IEnumerable<T>, System.IDisposable
     
     public List<T> ToList()
     {
-        var list = new List<T>(_count);
-        for (var i = 0; i < _count; i++)
+        var list = new List<T>(Length);
+        for (var i = 0; i < Length; i++)
         {
-            list.Add(_array[i]);
+            list.Add(Ptr[i]);
         }
 
         return list;
     }
-
-    public void Dispose()
+    
+    public Span<T> AsSpan()
     {
-        // MemoryArena will handle the deallocation
+        return new Span<T>(Ptr, Length);
     }
 
     public IEnumerator<T> GetEnumerator()
     {
-        return new ArenaArrayEnumerator(_array, _count);
+        return new ArenaArrayEnumerator(Ptr, Length);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -55,13 +55,13 @@ public readonly unsafe struct ArenaArray<T> : IEnumerable<T>, System.IDisposable
     private struct ArenaArrayEnumerator : IEnumerator<T>
     {
         private readonly T* _array;
-        private readonly int _count;
+        private readonly int _length;
         private int _index;
 
-        public ArenaArrayEnumerator(T* array, int count)
+        public ArenaArrayEnumerator(T* array, int length)
         {
             _array = array;
-            _count = count;
+            _length = length;
             _index = -1;
         }
 
@@ -71,7 +71,7 @@ public readonly unsafe struct ArenaArray<T> : IEnumerable<T>, System.IDisposable
         public bool MoveNext()
         {
             _index++;
-            return _index < _count;
+            return _index < _length;
         }
 
         public void Reset()
